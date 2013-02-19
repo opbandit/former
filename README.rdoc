@@ -1,0 +1,68 @@
+= Former
+
+Former turns an html string into a set of editable fields.  For instance, if you want to give users the ability to edit certain parts of pregenerated HTML (like the href's of a's), this gem makes it easy to create the form and handle user input.
+
+== Installation
+
+Add this line to your application's Gemfile:
+
+   gem 'former'
+
+And then execute:
+
+   $ bundle
+
+Or install it yourself as:
+
+   $ gem install former
+
+== Usage
+First, create a new parser that extends Builder class.
+
+  class Parser < Former::Builder
+    attr "a.important", :href
+    attr "img", :src
+    text "p", "a.important"
+  end
+
+In this example, we want to be able to edit the location of all links that have a class of "important", the location of all images, and the text in any paragraphs or important links.
+
+To produce the input fields from some example input HTML, first create an instance of your parser.
+
+  parsed = Parser.new "<p>some text<a class='important' href='http://alink.com'>some link text<img src='/an/image/path' /></a>last text</p>"
+  puts parsed.to_form_html
+
+This will output:
+
+  <input name="former_0" type="text" value="some text" />
+  <input name="former_1" type="text" value="http://alink.com" />
+  <input name="former_2" type="text" value="some link text" />
+  <input name="former_3" type="text" value="/an/image/path" />
+  <input name="former_4" type="text" value="last text" />
+
+You can then set fields individually or as a group (with, say, the params from a POST/GET):
+
+  parsed[0] = "A New Description"
+  parsed[1] = "http://anewlink.com"
+  # or...
+  parsed.set_values :former_0 => "A New Description", :former_1 => "http://anewlink.com"
+
+When the new values have been set, you can spit out the new HTML version:
+
+  puts parsed.to_html
+
+Will produce the original html with the new field values:
+
+  <p>A New Description<a class='important' href='http://anewlink.com'>some link...
+
+By default, the fields created are input's.  If you pass a block to the attr/text class methods, though, you can create your own.
+
+  class Parser < Former::Builder
+    attr "a.important", :href
+    attr("img", :src) { |elem, name|
+      # If the src url is a really long bit of text, you could do something like this.
+      # The name is the name (which has the index) necessary to set the value on a GET/POST
+      "<textarea name='#{name}'></textarea>"
+    }
+    text "p", "a.important"
+  end

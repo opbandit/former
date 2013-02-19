@@ -11,7 +11,6 @@ class BuilderTest < Test::Unit::TestCase
   def setup
     @html_txt = '<p>some text<a class="important" href="http://alink.com">some link text<img src="/an/image/path"></a>last text</p>'
     @parser = Parser.new @html_txt
-    puts @parser.to_form_html
   end
 
   def test_parsing

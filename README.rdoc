@@ -1,4 +1,6 @@
 = Former
+{<img src="https://secure.travis-ci.org/opbandit/former.png?branch=master" alt="Build Status" />}[https://travis-ci.org/opbandit/former]
+{<img src="https://gemnasium.com/opbandit/former.png" alt="Dependency Status" />}[https://gemnasium.com/opbandit/former]
 
 Former turns an html string into a set of editable fields.  For instance, if you want to give users the ability to edit certain parts of pregenerated HTML (like the href's of a's), this gem makes it easy to create the form and handle user input.
 

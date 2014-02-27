@@ -1,4 +1,5 @@
 require 'action_view'
+require 'json'
 
 module Former
   class Element
@@ -10,6 +11,15 @@ module Former
       @query = query
       @block = block
       @index = index
+    end
+
+    def to_json
+      h = { 
+        :value => (@query == :text) ? @node.text : @node[@query],
+        :nodename => @node.name
+      }
+      h[:attr] = @query unless @query == :text
+      h.to_json
     end
 
     def to_form_html

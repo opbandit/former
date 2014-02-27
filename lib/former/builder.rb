@@ -2,13 +2,14 @@ require 'nokogiri'
 
 module Former
   class Builder
+    class << self; attr_accessor :queries end
     attr_reader :editable
 
     def initialize(html)
       @html = Nokogiri::HTML.parse(html)
 
       matches = {}
-      @@queries.each { |path, qs|
+      self.class.queries.each { |path, qs|
         @html.search(path).each { |node| 
           # if all we need is the text, only include text kids
           if qs.length == 1 and qs.first[:query] == :text
@@ -33,12 +34,16 @@ module Former
     end
 
     def to_form_html
-      @editable.map { |e| e.to_form_html }.join("\n")
+      @editable.map(&:to_form_html).join("\n")
+    end
+
+    def to_json
+      "[" + @editable.map(&:to_json).join(",") + "]"
     end
 
     def to_html
       # nokogiri pads w/ xhtml/body elements
-      @html.search("//body").first.children.first.to_html
+      @html.search("//body").first.children.map(&:to_html).join
     end
 
     def []=(index, value)
@@ -53,12 +58,13 @@ module Former
     end
 
     def self.attr(elem, attr, &block)
-      @@queries ||= {}
-      @@queries[elem] ||= []
-      @@queries[elem] << { :query => attr, :block => block }
+      @queries ||= {}
+      @queries[elem] ||= []
+      @queries[elem] << { :query => attr, :block => block }
     end
     
     def self.text(*elems, &block)
+      attr("text()", :text, &block) if elems.length == 0
       elems.each { |elem| attr(elem, :text, &block) }
     end
   end

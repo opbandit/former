@@ -27,7 +27,7 @@ First, create a new parser that extends Builder class.
     text "p", "a.important"
   end
 
-In this example, we want to be able to edit the location of all links that have a class of "important", the location of all images, and the text in any paragraphs or important links.
+In this example, we want to be able to edit the location of all links that have a class of "important", the location of all images, and the text in any paragraphs or important links.  Note that the text method takes any number of parameters which each will be evaluated for text children (or, if you give no parameters, all text nodes will be included).
 
 To produce the input fields from some example input HTML, first create an instance of your parser.
 
@@ -41,6 +41,10 @@ This will output:
   <input name="former_2" type="text" value="some link text" />
   <input name="former_3" type="text" value="/an/image/path" />
   <input name="former_4" type="text" value="last text" />
+
+You can also convert the original html to json:
+
+  puts parsed.to_json
 
 You can then set fields individually or as a group (with, say, the params from a POST/GET):
 

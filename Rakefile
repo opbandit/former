@@ -15,5 +15,4 @@ desc "Run all unit tests"
 Rake::TestTask.new("test") { |t|
   t.libs << "lib"
   t.test_files = FileList['test/*.rb']
-  t.verbose = true
 }

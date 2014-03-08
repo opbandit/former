@@ -13,10 +13,34 @@ class AllTextParser < Former::Builder
   text
 end
 
+class AllTextParserNotBlank < Former::Builder
+  attr "a.important", :href
+  attr("img", :src)
+  text { |e| not e.text.strip.empty? }
+end
+
 class BuilderTest < Test::Unit::TestCase
   def setup
     @html_txt = '<p>some text<a class="important" href="http://alink.com">some link text<img src="/an/image/path"></a>last text</p>'
     @parser = Parser.new @html_txt
+  end
+
+  def test_ignore_blank_fields
+    p = AllTextParserNotBlank.new "<p>\n</p><h1>  </h1><p> some text </p>"
+    assert_equal p.length, 1
+    p[0] = "other text"
+    assert_equal "<p>\n</p><h1>  </h1><p>other text</p>", p.to_html
+
+    p = AllTextParserNotBlank.new "<p>\n</p><h1>  </h1> some text <p></p>"
+    assert_equal p.length, 1
+    p[0] = "other text"
+    assert_equal "<p>\n</p><h1>  </h1>other text<p></p>", p.to_html
+  end
+
+  def test_nohtml
+    p = Parser.new "some text that is long, and contains stuff!"
+    p.set_values :former_0 => "some other text"
+    assert_equal p.to_html, "some other text"
   end
 
   def test_parsing
@@ -42,6 +66,6 @@ class BuilderTest < Test::Unit::TestCase
 
     # now set it back
     @parser.set_values :former_0 => "some text"
-    @parser = Parser.new @html_txt
+    assert_equal @parser.to_html, @html_txt
   end
 end

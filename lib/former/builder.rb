@@ -9,8 +9,8 @@ module Former
       @html = Nokogiri::HTML.parse(html)
 
       matches = {}
-      self.class.queries.each { |path, qs|
-        @html.search(path).each { |node| 
+      self.class.queries.each do |path, qs|
+        @html.search(path).each do |node| 
           # if all we need is the text, only include text kids
           if qs.length == 1 and qs.first[:query] == :text
             node.traverse { |e| matches[e] = qs if e.text? and not matches.keys.include? e }
@@ -18,23 +18,29 @@ module Former
             # otherwise, ignore just text requests
             matches[node] = qs.select { |q| q[:query] != :text }
           end
-        }
-      }
+        end
+      end
 
       @editable = []
-      @html.traverse_prefix { |e|
-        (matches[e] || []).each { |query| 
-          @editable << Element.new(e, query[:query], @editable.length, query[:block]) 
-        }
-      }
+      @html.traverse_prefix do |e|
+        (matches[e] || []).each do |query|
+          if query[:block].nil? or query[:block].call(e)
+            @editable << Element.new(e, query[:query], @editable.length)
+          end
+        end
+      end
+      
+      # if we were given text only (no html), nokogiri will helpfully
+      # wrap it in a <p> - but our output should just be text.  So remember.
+      @nothtml = (@editable.length == 1 and @html.text == html)
+    end
+
+    def length
+      @editable.length
     end
 
     def each(&block)
       @editable.each { |e| block.call(e) }
-    end
-
-    def to_form_html
-      @editable.map(&:to_form_html).join("\n")
     end
 
     def to_json
@@ -42,12 +48,15 @@ module Former
     end
 
     def to_html
-      # nokogiri pads w/ xhtml/body elements
-      @html.search("//body").first.children.map(&:to_html).join
+      return @html.text if @nothtml
+      # nokogiri pads w/ html/body elements
+      @html.xpath("/html/body").children.map { |c|
+        c.serialize(:save_with => Nokogiri::XML::Node::SaveOptions::AS_HTML).strip
+      }.join
     end
 
     def []=(index, value)
-      @editable[index].set_value value
+      @editable[index].value = value
     end
 
     # vals should be { :former_0 => 'value', :former_1 => 'value two', ... }

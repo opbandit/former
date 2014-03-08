@@ -1,15 +1,12 @@
-require 'action_view'
 require 'json'
 
 module Former
   class Element
-    include ActionView::Helpers::TagHelper
-    attr_reader :node, :query, :block
+    attr_reader :node, :query
 
-    def initialize(node, query, index, block)
+    def initialize(node, query, index)
       @node = node
       @query = query
-      @block = block
       @index = index
     end
 
@@ -22,14 +19,11 @@ module Former
       h.to_json
     end
 
-    def to_form_html
-      name = "former_#{@index}"
-      return @block.call(@node, name) unless @block.nil?
-      value = (@query == :text) ? @node.text : @node[@query]
-      tag(:input, :type => 'text', :name => name, :value => value)
+    def value
+      @query == :text ? @node.content : @node[@query]
     end
 
-    def set_value(value)
+    def value=(value)
       if @query == :text
         @node.content = value
       else

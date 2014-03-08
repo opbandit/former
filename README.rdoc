@@ -32,15 +32,14 @@ In this example, we want to be able to edit the location of all links that have 
 To produce the input fields from some example input HTML, first create an instance of your parser.
 
   parsed = Parser.new "<p>some text<a class='important' href='http://alink.com'>some link text<img src='/an/image/path' /></a>last text</p>"
-  puts parsed.to_form_html
 
-This will output:
+Then, we can get information about the editable fields:
 
-  <input name="former_0" type="text" value="some text" />
-  <input name="former_1" type="text" value="http://alink.com" />
-  <input name="former_2" type="text" value="some link text" />
-  <input name="former_3" type="text" value="/an/image/path" />
-  <input name="former_4" type="text" value="last text" />
+  parsed.each { |elem| puts "#{elem.node.name} is #{elem.value}" }
+
+And, even create an html form from this:
+
+  parsed.each { |elem| puts "<input name='former_0' type='text' value='#{elem.value}' />" }
 
 You can also convert the original html to json:
 
@@ -61,14 +60,12 @@ Will produce the original html with the new field values:
 
   <p>A New Description<a class='important' href='http://anewlink.com'>some link...
 
-By default, the fields created are input's.  If you pass a block to the attr/text class methods, though, you can create your own.
+If you want finer grained control over what's considered an editable element, you can pass a block in as well to the attr method.  For instance, if you want only text fields that are not empty, you could use:
 
   class Parser < Former::Builder
-    attr "a.important", :href
-    attr("img", :src) { |elem, name|
-      # If the src url is a really long bit of text, you could do something like this.
-      # The name is the name (which has the index) necessary to set the value on a GET/POST
-      "<textarea name='#{name}'></textarea>"
-    }
-    text "p", "a.important"
+    text("p", "a.important") { |elem| not elem.text.strip.empty? }
   end
+
+  p = Parser.new("<p>\n</p><p>some text</p>").length # this is only 1
+  p[0] = 'other text'
+  p.to_html # => '<p>\n</p><p>other text</p>'

@@ -17,7 +17,7 @@ module Former
         :value => value,
         :nodename => @node.name
       }
-      h[:attr] = @query unless (@query == :text or @query == :style_url)
+      h[:attr] = @query unless @query == :text
       h.to_json
     end
 

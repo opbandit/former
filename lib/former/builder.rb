@@ -25,7 +25,7 @@ module Former
       @html.traverse_prefix do |e|
         (matches[e] || []).each do |query|
           if query[:block].nil? or query[:block].call(e)
-            @editable << Element.new(e, query[:query], @editable.length)
+            @editable << Element.new(e, query[:query], @editable.length, query[:args])
           end
         end
       end
@@ -66,15 +66,21 @@ module Former
       }
     end
 
-    def self.attr(elem, attr, &block)
+    def self.attr(elem, attr, args=nil, &block)
       @queries ||= {}
       @queries[elem] ||= []
-      @queries[elem] << { :query => attr, :block => block }
+      @queries[elem] << { :query => attr, :block => block, :args => args }
     end
     
     def self.text(*elems, &block)
       attr("text()", :text, &block) if elems.length == 0
       elems.each { |elem| attr(elem, :text, &block) }
+    end
+
+    def self.style_url(property, &block)
+      attr("[@style]", :style_url, { :property => property }) { |elem|
+        elem['style'].include? property and (block_given? ? block.call(elem) : true)
+      }
     end
   end
 end

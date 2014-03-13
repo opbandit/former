@@ -7,6 +7,11 @@ class Parser < Former::Builder
   text "p", "a.important"
 end
 
+class StyleParser < Former::Builder
+  style_url "background-image"
+  attr "img", :src
+end
+
 class AllTextParser < Former::Builder
   attr "a.important", :href
   attr("img", :src)
@@ -23,6 +28,23 @@ class BuilderTest < Test::Unit::TestCase
   def setup
     @html_txt = '<p>some text<a class="important" href="http://alink.com">some link text<img src="/an/image/path"></a>last text</p>'
     @parser = Parser.new @html_txt
+  end
+
+  def test_style_url
+    p = StyleParser.new "<div style=\"background-image: url('http://blah.com/image.jpg');\">blah</div>"
+    assert_equal p.length, 1
+    p[0] = "http://another.com/image.jpg"
+    assert_equal p.to_html, "<div style='background-image: url(\"http://another.com/image.jpg\");'>blah</div>"
+
+    p = Parser.new "<div style=\"color: #ffffff;\">blah</div>"
+    assert_equal p.length, 0
+
+    p = StyleParser.new "<div style=\"background-image: url('http://blah.com/image.jpg');\"><img src=\"/pic.jpg\" /></div>"
+    assert_equal p.length, 2
+    p[0] = "http://another.com/image.jpg"
+    assert_equal p.to_html, "<div style='background-image: url(\"http://another.com/image.jpg\");'><img src=\"/pic.jpg\"></div>"
+    p[1] = "/blah.jpg"
+    assert_equal p.to_html, "<div style='background-image: url(\"http://another.com/image.jpg\");'><img src=\"/blah.jpg\"></div>"
   end
 
   def test_ignore_blank_fields

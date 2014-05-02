@@ -24,6 +24,11 @@ class AllTextParserNotBlank < Former::Builder
   text { |e| not e.text.strip.empty? }
 end
 
+class DoubleImageMatch < Former::Builder
+  attr "img", :src
+  style_url "background-image"
+end
+
 class BuilderTest < Test::Unit::TestCase
   def setup
     @html_txt = '<p>some text<a class="important" href="http://alink.com">some link text<img src="/an/image/path"></a>last text</p>'
@@ -57,6 +62,13 @@ class BuilderTest < Test::Unit::TestCase
     assert_equal p.length, 1
     p[0] = "other text"
     assert_equal "<p>\n</p><h1>  </h1>other text<p></p>", p.to_html
+  end
+
+  def test_double_image_match
+    html = '<img alt="The dangers of vaccine denialism" class="left" src="http://img.washingtonpost.com/rf/image_90x60/2010-2019/WashingtonPost/2014/05/01/Editorial-Opinion/Images/Was8556714.jpg" style="display: block;">'
+
+    json = '[{"value":"http://img.washingtonpost.com/rf/image_90x60/2010-2019/WashingtonPost/2014/05/01/Editorial-Opinion/Images/Was8556714.jpg","nodename":"img","attr":"src"}]'
+    assert_equal DoubleImageMatch.new(html).to_json.to_s, json
   end
 
   def test_nohtml

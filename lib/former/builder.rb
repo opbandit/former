@@ -16,7 +16,8 @@ module Former
             node.traverse { |e| matches[e] = qs if e.text? and not matches.keys.include? e }
           else
             # otherwise, ignore just text requests
-            matches[node] = qs.select { |q| q[:query] != :text }
+            matches[node] ||= []
+            matches[node] += qs.select { |q| q[:query] != :text }
           end
         end
       end
